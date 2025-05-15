@@ -40,21 +40,7 @@ public function disponibles(Request $request)
 }
 
 
-public function reserver(Request $request)
-{
-    $creneau = Creneau::find($request->creneau_id);
 
-    // ❗ Inverser la condition
-    if (!$creneau || !$creneau->disponible) {
-        return response()->json(['message' => 'Créneau non disponible'], 422);
-    }
-
-    // ✅ Marquer le créneau comme réservé
-    $creneau->disponible = false;
-    $creneau->save();
-
-    return response()->json(['message' => 'Créneau réservé avec succès']);
-}
 public function getBySalle($id)
 {
     return response()->json(
@@ -63,6 +49,39 @@ public function getBySalle($id)
                 ->get()
     );
 }
+public function reserver(Request $request)
+    {
+        $creneauId = $request->input('creneau_id');
+        $creneau = Creneau::find($creneauId);
+
+        if (!$creneau) {
+            return response()->json(['message' => 'Créneau non trouvé.'], 404);
+        }
+
+        $creneau->disponible = false;
+        $creneau->save(); // Assure-toi de bien appeler save() ici
+
+        return response()->json(['message' => 'Créneau marqué comme indisponible.']);
+    }
+    public function liberer(Request $request)
+{
+    $creneauId = $request->input('creneau_id');
+
+    $creneau = Creneau::find($creneauId);
+
+    if (!$creneau) {
+        return response()->json(['message' => 'Créneau introuvable.'], 404);
+    }
+
+    $creneau->disponible = true;
+    $creneau->save();
+
+    return response()->json(['message' => 'Créneau libéré avec succès.']);
+}
 
 }
+
+
+
+
 

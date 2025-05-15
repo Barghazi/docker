@@ -10,7 +10,7 @@ class Creneau extends Model
     use HasFactory;
     protected $table = 'creneaux';
 
-    protected $fillable = ['salle_id', 'date', 'heure_début', 'heure_fin'];
+    protected $fillable = ['salle_id', 'date', 'heure_debut', 'heure_fin','disponible',];
 
     public function salle()
     {

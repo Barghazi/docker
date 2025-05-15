@@ -21,6 +21,10 @@ Route::get('/creneaux/disponibles', [CreneauController::class, 'disponibles']);
 
 Route::post('/creneaux/reserver', [CreneauController::class, 'reserver']);
 
+
+
 // routes/api.php
 Route::get('/creneaux/salle/{id}', [CreneauController::class, 'getBySalle']);
+Route::post('/creneaux/liberer', [CreneauController::class, 'liberer']);
+
 
