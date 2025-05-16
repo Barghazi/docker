@@ -1,0 +1,12 @@
+import axios from 'axios';
+
+const API_URL = 'http://localhost:8000/api/equipements'; // Adapte l'URL
+
+export const equipementService = {
+  getAll: async () => {
+    const response = await axios.get(API_URL);
+    return response.data;
+  },
+
+  // Tu peux rajouter d'autres fonctions CRUD si besoin
+};

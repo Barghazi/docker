@@ -4,8 +4,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SalleController;
 use App\Http\Controllers\CreneauController;
+use App\Http\Controllers\EquipementController;
 
 
+
+
+Route::apiResource('equipements', EquipementController::class);
 
 Route::apiResource('salles', SalleController::class); // Gère toutes les actions CRUD sur "salles"
 Route::get('salles-recherche', [SalleController::class, 'rechercher']); // Recherche spécifique

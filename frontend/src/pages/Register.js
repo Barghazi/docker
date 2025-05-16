@@ -16,7 +16,7 @@ export default function RegisterPage() {
     try {
       await register(form);
       alert('Inscription réussie');
-      navigate('/login');
+      navigate('/');
     } catch (err) {
       alert(err.response?.data?.message || 'Erreur');
     }

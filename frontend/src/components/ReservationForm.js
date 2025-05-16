@@ -4,8 +4,6 @@ import { useLocation } from 'react-router-dom';
 import '../styles/ReservationForm.css';
 import Notifications from './Notifications';
 
-
-
 function ReservationForm() {
   const location = useLocation();
   const { userId, salleId } = location.state || {};
@@ -27,8 +25,9 @@ function ReservationForm() {
   const [reservations, setReservations] = useState([]);
   const [salleNom, setSalleNom] = useState('');
   const [editingReservationId, setEditingReservationId] = useState(null);
+  const [showReservations, setShowReservations] = useState(false);
 
-  // Chargement des données initiales
+  // Chargement initial
   useEffect(() => {
     const currentUserId = userId || localStorage.getItem('userId') || '';
     setFormData((prev) => ({
@@ -39,30 +38,26 @@ function ReservationForm() {
 
     if (salleId) {
       axios.get(`http://localhost:8000/api/salles/${salleId}`)
-        .then(res => {
-          setSalleNom(res.data.nom || 'Inconnue');
-        })
-        .catch(err => console.error('Erreur chargement nom salle', err));
+        .then(res => setSalleNom(res.data.nom || 'Inconnue'))
+        .catch(err => console.error('Erreur nom salle', err));
 
       axios.get(`http://localhost:8000/api/creneaux/salle/${salleId}`)
-        .then((res) => {
+        .then(res => {
           setCreneaux(res.data);
           const dates = [...new Set(res.data.map(c => c.date))];
           setAvailableDates(dates);
         })
-        .catch((err) => console.error('Erreur chargement créneaux', err));
+        .catch(err => console.error('Erreur créneaux', err));
 
       if (currentUserId) {
         axios.get(`http://localhost:5002/reservations/user/${currentUserId}`)
-          .then((res) => {
-            setReservations(res.data);
-          })
-          .catch((err) => console.error('Erreur chargement réservations', err));
+          .then(res => setReservations(res.data))
+          .catch(err => console.error('Erreur réservations', err));
       }
     }
   }, [userId, salleId]);
 
-  // Mettre à jour les créneaux disponibles quand une date est sélectionnée
+  // Mise à jour des créneaux
   useEffect(() => {
     if (formData.date) {
       const filtered = creneaux.filter((c) => c.date === formData.date);
@@ -70,7 +65,7 @@ function ReservationForm() {
     }
   }, [formData.date, creneaux]);
 
-  // Mettre à jour les heures quand un créneau est sélectionné
+  // Mise à jour des heures
   useEffect(() => {
     const selected = availableCreneaux.find((c) => c.id === parseInt(formData.creneauId));
     if (selected) {
@@ -91,11 +86,7 @@ function ReservationForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!formData.creneauId) {
-      alert('Veuillez sélectionner un créneau.');
-      return;
-    }
+    if (!formData.creneauId) return alert('Veuillez sélectionner un créneau.');
 
     const payload = {
       userId: formData.userId,
@@ -110,12 +101,10 @@ function ReservationForm() {
 
     try {
       if (editingReservationId) {
-        // UPDATE
         await axios.put(`http://localhost:5002/reservations/${editingReservationId}`, payload);
         setNotification('✅ Réservation modifiée avec succès !');
         setEditingReservationId(null);
       } else {
-        // CREATE
         await axios.post('http://localhost:5002/reservations', payload);
         setNotification('✅ Réservation effectuée !');
       }
@@ -138,38 +127,29 @@ function ReservationForm() {
   };
 
   const handleEdit = (reservation) => {
-    setEditingReservationId(reservation.id);
+    setEditingReservationId(reservation._id);
     setFormData((prev) => ({
       ...prev,
       date: reservation.date,
-      creneauId: reservation.creneauId.toString(), // Assurez-vous que c'est une string
+      creneauId: reservation.creneauId.toString(),
       heureDebut: reservation.heureDebut,
       heureFin: reservation.heureFin
     }));
     setNotification('✏️ Mode modification activé');
   };
 
- function handleDelete(reservationId) {
-  if (!reservationId) {
-    console.error("ID de réservation manquant !");
-    return;
-  }
-
-  axios.delete(`http://localhost:5002/reservations/${reservationId}`)
-    .then(response => {
-      console.log('Suppression réussie', response.data);
-      // Mise à jour locale du state pour retirer la réservation supprimée
-      setReservations(prevReservations =>
-        prevReservations.filter(reservation => reservation._id !== reservationId)
-      );
-      setNotification('🗑️ Réservation supprimée avec succès');
-    })
-    .catch(error => {
-      console.error('Erreur suppression', error);
-      setNotification('❌ Erreur lors de la suppression');
-    });
-}
-       
+  const handleDelete = (reservationId) => {
+    if (!reservationId) return console.error("ID manquant !");
+    axios.delete(`http://localhost:5002/reservations/${reservationId}`)
+      .then(() => {
+        setReservations(prev => prev.filter(r => r._id !== reservationId));
+        setNotification('🗑️ Réservation supprimée');
+      })
+      .catch(err => {
+        console.error('Erreur suppression', err);
+        setNotification('❌ Erreur lors de la suppression');
+      });
+  };
 
   return (
     <div className="reservation-form-container">
@@ -213,36 +193,42 @@ function ReservationForm() {
 
       {notification && <div className="notification">{notification}</div>}
 
-      <div className="reservations-list">
-        <h3>Mes Réservations</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Créneau</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {reservations.length > 0 ? (
-              reservations.map((reservation) => (
-                <tr key={reservation._id}>
-                  <td>{new Date(reservation.date).toLocaleDateString('fr-FR')}</td>
-                  <td>{reservation.heureDebut} → {reservation.heureFin}</td>
-                  <td>
-                    <button onClick={() => handleEdit(reservation)}>Modifier</button>
-                    <button onClick={() => handleDelete(reservation._id)}>Supprimer</button>
-                  </td>
-                </tr>
-              ))
-            ) : (
+      <button onClick={() => setShowReservations(!showReservations)} className="toggle-button">
+        {showReservations ? 'Masquer mes réservations' : 'Afficher mes réservations'}
+      </button>
+
+      {showReservations && (
+        <div className="reservations-list">
+          <h3>Mes Réservations</h3>
+          <table>
+            <thead>
               <tr>
-                <td colSpan="3">Aucune réservation pour le moment.</td>
+                <th>Date</th>
+                <th>Créneau</th>
+                <th>Action</th>
               </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {reservations.length > 0 ? (
+                reservations.map((reservation) => (
+                  <tr key={reservation._id}>
+                    <td>{new Date(reservation.date).toLocaleDateString('fr-FR')}</td>
+                    <td>{reservation.heureDebut} → {reservation.heureFin}</td>
+                    <td>
+                      <button onClick={() => handleEdit(reservation)}>Modifier</button>
+                      <button onClick={() => handleDelete(reservation._id)}>Supprimer</button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="3">Aucune réservation.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

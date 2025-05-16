@@ -37,7 +37,7 @@ const Login = () => {
 
       // Redirection en fonction du rôle
       if (role === 'gestionnaire') {
-        navigate('/ajouter');
+        navigate('/admin');
       } else {
         navigate('/salles');
       }

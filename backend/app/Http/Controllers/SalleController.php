@@ -17,17 +17,34 @@ class SalleController extends Controller
     }
 
     public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'nom' => 'required',
-            'type' => 'required',
-            'capacité' => 'required|integer',
-            'équipement' => 'nullable',
-            'localisation' => 'required',
-        ]);
+{
+    $request->validate([
+    'nom' => 'required|string|max:255',
+    'type' => 'required|string',
+    'capacité' => 'required|integer',
+    'équipement' => 'required|string',
+    'localisation' => 'required|string',
+    'image' => 'nullable|image|max:2048', // taille max 2 Mo
+]);
 
-        return Salle::create($validated);
+    if ($request->hasFile('image')) {
+        $image = $request->file('image');
+        $imageName = time() . '.' . $image->getClientOriginalExtension();
+        $image->move(public_path('images/salles'), $imageName);
+    } else {
+        $imageName = null;
     }
+
+    Salle::create([
+        'nom' => $request->nom,
+        'capacite' => $request->capacite,
+        'type' => $request->type,
+        'etat' => $request->etat,
+        'image' => $imageName,
+    ]);
+
+    return response()->json(['message' => 'Salle ajoutée avec succès'], 201);
+}
 
     public function show(Salle $salle)
     {
