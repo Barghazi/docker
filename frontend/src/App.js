@@ -7,6 +7,7 @@ import Salles from './pages/Salles';
 import ReservationForm from './components/ReservationForm';
 import Equipements from './pages/Equipements';
 import AdminSalles from './pages/AdminSalles';
+import Users from './pages/Users';
 
 
 
@@ -24,7 +25,7 @@ function App() {
         <Route path="/salles" element={<Salles />} />
         <Route path="/equipements" element={< Equipements />} />
         <Route path="/admin/salles" element={< AdminSalles />} />
-        
+        <Route path="/users" element={<Users />} />
         <Route path="/reservations" element={< ReservationForm />} />
         { /*<Route path="/admin" element={<SalleForm />} /> */}
       </Routes>
